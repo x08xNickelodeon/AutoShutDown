@@ -1,1 +1,9 @@
+#####################################################################
+#                         ASD Plugin Config                         #
+#               Made by x08xNick • https://techbyte.host            #
+#                                                                   #
+#    Shuts down the server after X minutes of player inactivity     #
+#             Max allowed shutdown-after time: 10 mins              #
+#####################################################################
+
 shutdown-after: 10

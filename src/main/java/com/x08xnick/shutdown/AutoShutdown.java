@@ -1,4 +1,3 @@
-
 package com.x08xnick.shutdown;
 
 import org.bukkit.Bukkit;
@@ -18,7 +17,7 @@ public class AutoShutdown extends JavaPlugin {
         saveDefaultConfig();
         loadSettings();
         startInactivityChecker();
-        getLogger().info("AutoShutdown enabled.");
+        getLogger().info("§e[AutoShutdown] Enabled. Shutdown time: " + shutdownAfterMinutes + " minutes of inactivity.");
     }
 
     @Override
@@ -26,11 +25,18 @@ public class AutoShutdown extends JavaPlugin {
         if (checkerTask != null) {
             checkerTask.cancel();
         }
-        getLogger().info("AutoShutdown disabled.");
+        getLogger().info("§c[AutoShutdown] Disabled.");
     }
 
     private void loadSettings() {
         shutdownAfterMinutes = getConfig().getInt("shutdown-after", 10);
+
+        if (shutdownAfterMinutes > 10) {
+            getLogger().warning("§e[AutoShutdown] Config 'shutdown-after' was greater than 10. Resetting to 10.");
+            shutdownAfterMinutes = 10;
+            getConfig().set("shutdown-after", 10);
+            saveConfig();
+        }
     }
 
     private void startInactivityChecker() {
@@ -40,23 +46,32 @@ public class AutoShutdown extends JavaPlugin {
 
         checkerTask = new BukkitRunnable() {
             private long lastOnlineTime = System.currentTimeMillis();
+            private int lastLoggedMinute = -1;
 
             @Override
             public void run() {
                 int players = Bukkit.getOnlinePlayers().size();
                 if (players > 0) {
                     lastOnlineTime = System.currentTimeMillis();
+                    lastLoggedMinute = -1; // reset tracker
                 } else {
                     long inactiveMillis = System.currentTimeMillis() - lastOnlineTime;
-                    if (inactiveMillis >= shutdownAfterMinutes * 60 * 1000L) {
-                        getLogger().info("No players for " + shutdownAfterMinutes + " minutes. Shutting down.");
+                    int inactiveMinutes = (int) (inactiveMillis / 60000);
+
+                    if (inactiveMinutes != lastLoggedMinute && inactiveMinutes < shutdownAfterMinutes) {
+                        Bukkit.getConsoleSender().sendMessage("§e[AutoShutdown] No players online for " + inactiveMinutes + " minute(s).");
+                        lastLoggedMinute = inactiveMinutes;
+                    }
+
+                    if (inactiveMinutes >= shutdownAfterMinutes) {
+                        Bukkit.getConsoleSender().sendMessage("§c[AutoShutdown] No players for " + shutdownAfterMinutes + " minutes. Shutting down.");
                         Bukkit.shutdown();
                     }
                 }
             }
         };
 
-        checkerTask.runTaskTimer(this, 20L, 20L * 60); // every minute
+        checkerTask.runTaskTimer(this, 20L, 20L * 60); // every 1 minute
     }
 
     @Override
@@ -67,7 +82,7 @@ public class AutoShutdown extends JavaPlugin {
                     reloadConfig();
                     loadSettings();
                     startInactivityChecker();
-                    sender.sendMessage("§aAutoShutdown config reloaded.");
+                    sender.sendMessage("§a[AutoShutdown] Config reloaded.");
                 } else {
                     sender.sendMessage("§cYou don't have permission.");
                 }
