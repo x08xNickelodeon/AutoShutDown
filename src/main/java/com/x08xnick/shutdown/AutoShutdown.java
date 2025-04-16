@@ -6,6 +6,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bstats.bukkit.Metrics;
 
 public class AutoShutdown extends JavaPlugin {
 
@@ -14,6 +15,10 @@ public class AutoShutdown extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        // bStats Metrics — plugin ID 25485
+        int pluginId = 25485;
+        Metrics metrics = new Metrics(this, pluginId);
+
         saveDefaultConfig();
         loadSettings();
         startInactivityChecker();
@@ -53,7 +58,7 @@ public class AutoShutdown extends JavaPlugin {
                 int players = Bukkit.getOnlinePlayers().size();
                 if (players > 0) {
                     lastOnlineTime = System.currentTimeMillis();
-                    lastLoggedMinute = -1; // reset tracker
+                    lastLoggedMinute = -1;
                 } else {
                     long inactiveMillis = System.currentTimeMillis() - lastOnlineTime;
                     int inactiveMinutes = (int) (inactiveMillis / 60000);
